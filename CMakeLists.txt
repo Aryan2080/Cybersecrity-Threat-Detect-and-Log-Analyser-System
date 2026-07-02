@@ -11,6 +11,10 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Collect source files — each module adds its .cpp here as we build it
 set(SOURCES
     src/main.cpp
+    src/models/LogEntry.cpp
+    src/models/Threat.cpp
+    src/models/Alert.cpp
+    src/loader/CSVLoader.cpp
 )
 
 # Main executable
