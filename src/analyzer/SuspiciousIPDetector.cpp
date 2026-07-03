@@ -1,5 +1,5 @@
 #include "analyzer/SuspiciousIPDetector.hpp"
-#include <iostream>
+#include "utils/Logger.hpp"
 
 SuspiciousIPDetector::SuspiciousIPDetector(int requestThreshold,
                                            const std::unordered_set<std::string>& knownBadIPs)
@@ -31,8 +31,8 @@ std::vector<Threat> SuspiciousIPDetector::detect(
         }
     }
 
-    std::cout << "[INFO] SuspiciousIPDetector: found " << threats.size()
-              << " threat(s)\n";
+    Logger::info("SuspiciousIPDetector: found " + std::to_string(threats.size()) +
+                 " threat(s)");
 
     return threats;
 }

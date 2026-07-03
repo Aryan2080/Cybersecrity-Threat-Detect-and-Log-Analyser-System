@@ -1,6 +1,6 @@
 #include "loader/CSVLoader.hpp"
+#include "utils/Logger.hpp"
 #include <fstream>
-#include <iostream>
 #include <sstream>
 
 CSVLoader::CSVLoader(const std::string& filePath)
@@ -49,7 +49,7 @@ std::vector<LogEntry> CSVLoader::loadLogs() {
 
     std::ifstream file(filePath);
     if (!file.is_open()) {
-        std::cerr << "[ERROR] Cannot open file: " << filePath << "\n";
+        Logger::error("Cannot open file: " + filePath);
         return entries;
     }
 
@@ -57,7 +57,7 @@ std::vector<LogEntry> CSVLoader::loadLogs() {
 
     // Skip header row
     if (!std::getline(file, line)) {
-        std::cerr << "[ERROR] File is empty: " << filePath << "\n";
+        Logger::error("File is empty: " + filePath);
         return entries;
     }
 
@@ -73,8 +73,8 @@ std::vector<LogEntry> CSVLoader::loadLogs() {
 
         if (!validateRow(fields)) {
             errorCount++;
-            std::cerr << "[WARN] Skipping invalid row " << lineNumber
-                      << ": " << line << "\n";
+            Logger::warn("Skipping invalid row " + std::to_string(lineNumber) +
+                         ": " + line);
             continue;
         }
 
@@ -83,11 +83,11 @@ std::vector<LogEntry> CSVLoader::loadLogs() {
 
     file.close();
 
-    std::cout << "[INFO] Loaded " << entries.size() << " log entries from "
-              << filePath << "\n";
+    Logger::info("Loaded " + std::to_string(entries.size()) +
+                 " log entries from " + filePath);
 
     if (errorCount > 0) {
-        std::cout << "[INFO] Skipped " << errorCount << " invalid rows\n";
+        Logger::info("Skipped " + std::to_string(errorCount) + " invalid rows");
     }
 
     return entries;

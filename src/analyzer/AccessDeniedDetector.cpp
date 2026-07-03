@@ -1,5 +1,5 @@
 #include "analyzer/AccessDeniedDetector.hpp"
-#include <iostream>
+#include "utils/Logger.hpp"
 
 AccessDeniedDetector::AccessDeniedDetector(int denialThreshold)
     : denialThreshold(denialThreshold) {}
@@ -27,8 +27,8 @@ std::vector<Threat> AccessDeniedDetector::detect(
         }
     }
 
-    std::cout << "[INFO] AccessDeniedDetector: found " << threats.size()
-              << " threat(s)\n";
+    Logger::info("AccessDeniedDetector: found " + std::to_string(threats.size()) +
+                 " threat(s)");
 
     return threats;
 }

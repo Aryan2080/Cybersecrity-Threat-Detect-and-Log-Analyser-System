@@ -1,4 +1,5 @@
 #include "analyzer/ThreatAnalyzer.hpp"
+#include "utils/Logger.hpp"
 #include <iostream>
 
 void ThreatAnalyzer::buildIndex(const std::vector<LogEntry>& entries) {
@@ -8,8 +9,8 @@ void ThreatAnalyzer::buildIndex(const std::vector<LogEntry>& entries) {
         ipIndex[entry.sourceIP].push_back(entry);
     }
 
-    std::cout << "[INFO] Built IP index: " << ipIndex.size()
-              << " unique IPs from " << entries.size() << " entries\n";
+    Logger::info("Built IP index: " + std::to_string(ipIndex.size()) +
+                 " unique IPs from " + std::to_string(entries.size()) + " entries");
 }
 
 std::vector<Threat> ThreatAnalyzer::runAllDetectors(const std::vector<LogEntry>& entries) {
@@ -36,7 +37,7 @@ std::vector<Threat> ThreatAnalyzer::runAllDetectors(const std::vector<LogEntry>&
 
 void ThreatAnalyzer::analyze(const std::vector<LogEntry>& entries) {
     if (entries.empty()) {
-        std::cout << "[WARN] No entries to analyze\n";
+        Logger::warn("No entries to analyze");
         return;
     }
 

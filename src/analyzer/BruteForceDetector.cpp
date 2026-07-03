@@ -1,9 +1,9 @@
 #include "analyzer/BruteForceDetector.hpp"
+#include "utils/Logger.hpp"
 #include <deque>
 #include <ctime>
 #include <sstream>
 #include <iomanip>
-#include <iostream>
 
 BruteForceDetector::BruteForceDetector(int maxFailedAttempts, int activityWindowSeconds)
     : maxFailedAttempts(maxFailedAttempts),
@@ -57,8 +57,8 @@ std::vector<Threat> BruteForceDetector::detect(
         }
     }
 
-    std::cout << "[INFO] BruteForceDetector: found " << threats.size()
-              << " threat(s)\n";
+    Logger::info("BruteForceDetector: found " + std::to_string(threats.size()) +
+                 " threat(s)");
 
     return threats;
 }

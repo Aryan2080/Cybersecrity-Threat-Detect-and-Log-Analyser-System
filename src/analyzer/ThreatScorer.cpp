@@ -1,6 +1,6 @@
 #include "analyzer/ThreatScorer.hpp"
+#include "utils/Logger.hpp"
 #include <algorithm>
-#include <iostream>
 
 ThreatScorer::ThreatScorer() {
     baseWeights["BRUTE_FORCE"]   = 30;
@@ -51,8 +51,8 @@ std::vector<Alert> ThreatScorer::scoreThreats(const std::vector<Threat>& threats
             return a.threatScore > b.threatScore;
         });
 
-    std::cout << "[INFO] ThreatScorer: scored " << alerts.size()
-              << " alert(s)\n";
+    Logger::info("ThreatScorer: scored " + std::to_string(alerts.size()) +
+                 " alert(s)");
 
     return alerts;
 }

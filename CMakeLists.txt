@@ -23,6 +23,7 @@ set(SOURCES
     src/analyzer/ThreatScorer.cpp
     src/analyzer/AlertManager.cpp
     src/analyzer/ReportGenerator.cpp
+    src/utils/Logger.cpp
 )
 
 # Main executable
@@ -45,6 +46,7 @@ set(LIB_SOURCES
     src/analyzer/ThreatScorer.cpp
     src/analyzer/AlertManager.cpp
     src/analyzer/ReportGenerator.cpp
+    src/utils/Logger.cpp
 )
 
 # Test executables

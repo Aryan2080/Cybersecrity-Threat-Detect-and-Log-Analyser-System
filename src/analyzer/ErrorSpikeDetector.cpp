@@ -1,9 +1,9 @@
 #include "analyzer/ErrorSpikeDetector.hpp"
+#include "utils/Logger.hpp"
 #include <deque>
 #include <ctime>
 #include <sstream>
 #include <iomanip>
-#include <iostream>
 
 ErrorSpikeDetector::ErrorSpikeDetector(int spikeThreshold, int errorWindowSeconds)
     : spikeThreshold(spikeThreshold),
@@ -52,8 +52,8 @@ std::vector<Threat> ErrorSpikeDetector::detect(
         }
     }
 
-    std::cout << "[INFO] ErrorSpikeDetector: found " << threats.size()
-              << " threat(s)\n";
+    Logger::info("ErrorSpikeDetector: found " + std::to_string(threats.size()) +
+                 " threat(s)");
 
     return threats;
 }

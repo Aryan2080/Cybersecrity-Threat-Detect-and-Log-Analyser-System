@@ -1,5 +1,5 @@
 #include "analyzer/AlertManager.hpp"
-#include <iostream>
+#include "utils/Logger.hpp"
 
 void AlertManager::addAlert(const Alert& alert) {
     alertQueue.push(alert);
@@ -14,8 +14,8 @@ std::vector<Alert> AlertManager::getRankedAlerts() {
         alertQueue.pop();
     }
 
-    std::cout << "[INFO] AlertManager: ranked " << ranked.size()
-              << " alert(s) by severity\n";
+    Logger::info("AlertManager: ranked " + std::to_string(ranked.size()) +
+                 " alert(s) by severity");
 
     return ranked;
 }
