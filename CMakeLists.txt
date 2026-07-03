@@ -18,6 +18,7 @@ set(SOURCES
     src/analyzer/ThreatAnalyzer.cpp
     src/analyzer/BruteForceDetector.cpp
     src/analyzer/SuspiciousIPDetector.cpp
+    src/analyzer/AccessDeniedDetector.cpp
 )
 
 # Main executable

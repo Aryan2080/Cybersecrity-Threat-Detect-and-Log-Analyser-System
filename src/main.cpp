@@ -1,13 +1,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_set>
 #include "models/LogEntry.hpp"
 #include "models/Threat.hpp"
 #include "loader/CSVLoader.hpp"
 #include "analyzer/ThreatAnalyzer.hpp"
-#include "analyzer/BruteForceDetector.hpp"
-#include "analyzer/SuspiciousIPDetector.hpp"
+#include "analyzer/AccessDeniedDetector.hpp"
 
 int main(int argc, char* argv[]) {
     std::string log_file = "data/sample_logs.csv";
@@ -29,32 +27,24 @@ int main(int argc, char* argv[]) {
 
     const auto& index = analyzer.getIndex();
 
-    // Test 1: Volume-based detection (threshold=10)
-    std::cout << "\n--- Test 1: SuspiciousIP threshold=10, no blacklist ---\n";
-    SuspiciousIPDetector det1(10);
+    // Test 1: Default threshold (3)
+    std::cout << "\n--- Test 1: AccessDenied threshold=3 ---\n";
+    AccessDeniedDetector det1(3);
     for (const auto& t : det1.detect(index)) {
         std::cout << "  " << t.toString() << "\n";
     }
 
-    // Test 2: Lower threshold (threshold=5)
-    std::cout << "\n--- Test 2: SuspiciousIP threshold=5, no blacklist ---\n";
-    SuspiciousIPDetector det2(5);
+    // Test 2: Higher threshold (5)
+    std::cout << "\n--- Test 2: AccessDenied threshold=5 ---\n";
+    AccessDeniedDetector det2(5);
     for (const auto& t : det2.detect(index)) {
         std::cout << "  " << t.toString() << "\n";
     }
 
-    // Test 3: Known-bad IP list
-    std::cout << "\n--- Test 3: SuspiciousIP threshold=100, with blacklist ---\n";
-    std::unordered_set<std::string> blacklist = {"10.0.0.50", "172.16.0.1"};
-    SuspiciousIPDetector det3(100, blacklist);
+    // Test 3: Threshold of 1 (catch everything)
+    std::cout << "\n--- Test 3: AccessDenied threshold=1 ---\n";
+    AccessDeniedDetector det3(1);
     for (const auto& t : det3.detect(index)) {
-        std::cout << "  " << t.toString() << "\n";
-    }
-
-    // Test 4: Both volume and blacklist
-    std::cout << "\n--- Test 4: SuspiciousIP threshold=5, with blacklist ---\n";
-    SuspiciousIPDetector det4(5, {"192.168.1.40"});
-    for (const auto& t : det4.detect(index)) {
         std::cout << "  " << t.toString() << "\n";
     }
 
