@@ -21,6 +21,7 @@ set(SOURCES
     src/analyzer/AccessDeniedDetector.cpp
     src/analyzer/ErrorSpikeDetector.cpp
     src/analyzer/ThreatScorer.cpp
+    src/analyzer/AlertManager.cpp
 )
 
 # Main executable

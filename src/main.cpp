@@ -11,6 +11,7 @@
 #include "analyzer/AccessDeniedDetector.hpp"
 #include "analyzer/ErrorSpikeDetector.hpp"
 #include "analyzer/ThreatScorer.hpp"
+#include "analyzer/AlertManager.hpp"
 
 int main(int argc, char* argv[]) {
     std::string log_file = "data/sample_logs.csv";
@@ -29,10 +30,9 @@ int main(int argc, char* argv[]) {
     std::vector<LogEntry> entries = loader.loadLogs();
     ThreatAnalyzer analyzer;
     analyzer.analyze(entries);
-
     const auto& index = analyzer.getIndex();
 
-    // Run all 4 detectors and collect threats
+    // Run all 4 detectors
     std::vector<Threat> allThreats;
 
     BruteForceDetector bf(5, 300);
@@ -51,15 +51,26 @@ int main(int argc, char* argv[]) {
     auto esThreats = es.detect(entries);
     allThreats.insert(allThreats.end(), esThreats.begin(), esThreats.end());
 
-    std::cout << "\nTotal raw threats: " << allThreats.size() << "\n";
-
-    // Score all threats
-    std::cout << "\n--- ThreatScorer Output ---\n";
+    // Score threats
     ThreatScorer scorer;
-    std::vector<Alert> alerts = scorer.scoreThreats(allThreats);
+    std::vector<Alert> scoredAlerts = scorer.scoreThreats(allThreats);
 
-    for (const auto& alert : alerts) {
-        std::cout << "  " << alert.toString() << "\n";
+    // Feed into AlertManager (priority queue)
+    std::cout << "\n--- AlertManager Test ---\n";
+    AlertManager alertManager;
+
+    std::cout << "Inserting " << scoredAlerts.size() << " alerts into priority queue...\n";
+    for (const auto& alert : scoredAlerts) {
+        alertManager.addAlert(alert);
+        std::cout << "  push: score=" << alert.threatScore << " (" << alert.threatType << ")\n";
+    }
+
+    // Extract in ranked order
+    std::cout << "\nExtracting in priority order (highest score first):\n";
+    std::vector<Alert> ranked = alertManager.getRankedAlerts();
+
+    for (size_t i = 0; i < ranked.size(); i++) {
+        std::cout << "  #" << (i + 1) << " " << ranked[i].toString() << "\n";
     }
 
     return 0;
