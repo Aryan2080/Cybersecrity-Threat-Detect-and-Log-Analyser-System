@@ -12,6 +12,7 @@
 #include "analyzer/ErrorSpikeDetector.hpp"
 #include "analyzer/ThreatScorer.hpp"
 #include "analyzer/AlertManager.hpp"
+#include "analyzer/ReportGenerator.hpp"
 
 int main(int argc, char* argv[]) {
     std::string log_file = "data/sample_logs.csv";
@@ -25,14 +26,16 @@ int main(int argc, char* argv[]) {
     std::cout << "       Log Analyzer v1.0.0\n";
     std::cout << "========================================\n\n";
 
-    // Load and index
+    // Step 1: Load CSV
     CSVLoader loader(log_file);
     std::vector<LogEntry> entries = loader.loadLogs();
+
+    // Step 2: Build index
     ThreatAnalyzer analyzer;
     analyzer.analyze(entries);
     const auto& index = analyzer.getIndex();
 
-    // Run all 4 detectors
+    // Step 3: Run all detectors
     std::vector<Threat> allThreats;
 
     BruteForceDetector bf(5, 300);
@@ -51,27 +54,21 @@ int main(int argc, char* argv[]) {
     auto esThreats = es.detect(entries);
     allThreats.insert(allThreats.end(), esThreats.begin(), esThreats.end());
 
-    // Score threats
+    // Step 4: Score threats
     ThreatScorer scorer;
     std::vector<Alert> scoredAlerts = scorer.scoreThreats(allThreats);
 
-    // Feed into AlertManager (priority queue)
-    std::cout << "\n--- AlertManager Test ---\n";
+    // Step 5: Rank via AlertManager
     AlertManager alertManager;
-
-    std::cout << "Inserting " << scoredAlerts.size() << " alerts into priority queue...\n";
     for (const auto& alert : scoredAlerts) {
         alertManager.addAlert(alert);
-        std::cout << "  push: score=" << alert.threatScore << " (" << alert.threatType << ")\n";
     }
-
-    // Extract in ranked order
-    std::cout << "\nExtracting in priority order (highest score first):\n";
     std::vector<Alert> ranked = alertManager.getRankedAlerts();
 
-    for (size_t i = 0; i < ranked.size(); i++) {
-        std::cout << "  #" << (i + 1) << " " << ranked[i].toString() << "\n";
-    }
+    // Step 6: Display report
+    ReportGenerator report;
+    report.displayAlerts(ranked);
+    report.displaySummary(ranked);
 
     return 0;
 }
