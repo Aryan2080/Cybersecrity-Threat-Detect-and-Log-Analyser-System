@@ -30,3 +30,38 @@ add_executable(threat_analyzer ${SOURCES})
 
 # Copy data files to build directory so the executable can find them
 file(COPY ${PROJECT_SOURCE_DIR}/data DESTINATION ${PROJECT_BINARY_DIR})
+
+# Shared library sources (everything except main.cpp)
+set(LIB_SOURCES
+    src/models/LogEntry.cpp
+    src/models/Threat.cpp
+    src/models/Alert.cpp
+    src/loader/CSVLoader.cpp
+    src/analyzer/ThreatAnalyzer.cpp
+    src/analyzer/BruteForceDetector.cpp
+    src/analyzer/SuspiciousIPDetector.cpp
+    src/analyzer/AccessDeniedDetector.cpp
+    src/analyzer/ErrorSpikeDetector.cpp
+    src/analyzer/ThreatScorer.cpp
+    src/analyzer/AlertManager.cpp
+    src/analyzer/ReportGenerator.cpp
+)
+
+# Test executables
+enable_testing()
+
+add_executable(test_csv_loader tests/test_csv_loader.cpp ${LIB_SOURCES})
+add_executable(test_brute_force_detector tests/test_brute_force_detector.cpp ${LIB_SOURCES})
+add_executable(test_suspicious_ip_detector tests/test_suspicious_ip_detector.cpp ${LIB_SOURCES})
+add_executable(test_access_denied_detector tests/test_access_denied_detector.cpp ${LIB_SOURCES})
+add_executable(test_error_spike_detector tests/test_error_spike_detector.cpp ${LIB_SOURCES})
+add_executable(test_threat_scorer tests/test_threat_scorer.cpp ${LIB_SOURCES})
+add_executable(test_alert_manager tests/test_alert_manager.cpp ${LIB_SOURCES})
+
+add_test(NAME CSVLoader COMMAND test_csv_loader)
+add_test(NAME BruteForceDetector COMMAND test_brute_force_detector)
+add_test(NAME SuspiciousIPDetector COMMAND test_suspicious_ip_detector)
+add_test(NAME AccessDeniedDetector COMMAND test_access_denied_detector)
+add_test(NAME ErrorSpikeDetector COMMAND test_error_spike_detector)
+add_test(NAME ThreatScorer COMMAND test_threat_scorer)
+add_test(NAME AlertManager COMMAND test_alert_manager)
