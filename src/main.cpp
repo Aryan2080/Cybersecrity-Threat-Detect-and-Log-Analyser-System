@@ -3,9 +3,14 @@
 #include <vector>
 #include "models/LogEntry.hpp"
 #include "models/Threat.hpp"
+#include "models/Alert.hpp"
 #include "loader/CSVLoader.hpp"
 #include "analyzer/ThreatAnalyzer.hpp"
+#include "analyzer/BruteForceDetector.hpp"
+#include "analyzer/SuspiciousIPDetector.hpp"
+#include "analyzer/AccessDeniedDetector.hpp"
 #include "analyzer/ErrorSpikeDetector.hpp"
+#include "analyzer/ThreatScorer.hpp"
 
 int main(int argc, char* argv[]) {
     std::string log_file = "data/sample_logs.csv";
@@ -25,34 +30,37 @@ int main(int argc, char* argv[]) {
     ThreatAnalyzer analyzer;
     analyzer.analyze(entries);
 
-    // Test 1: Default settings (5 errors in 60s)
-    std::cout << "\n--- Test 1: ErrorSpike threshold=5, window=60s ---\n";
-    ErrorSpikeDetector det1(5, 60);
-    for (const auto& t : det1.detect(entries)) {
-        std::cout << "  " << t.toString() << "\n";
-    }
+    const auto& index = analyzer.getIndex();
 
-    // Test 2: Lower threshold (3 errors in 60s)
-    std::cout << "\n--- Test 2: ErrorSpike threshold=3, window=60s ---\n";
-    ErrorSpikeDetector det2(3, 60);
-    for (const auto& t : det2.detect(entries)) {
-        std::cout << "  " << t.toString() << "\n";
-    }
+    // Run all 4 detectors and collect threats
+    std::vector<Threat> allThreats;
 
-    // Test 3: Tight window (5 errors in 10s)
-    std::cout << "\n--- Test 3: ErrorSpike threshold=5, window=10s ---\n";
-    ErrorSpikeDetector det3(5, 10);
-    for (const auto& t : det3.detect(entries)) {
-        std::cout << "  " << t.toString() << "\n";
-    }
+    BruteForceDetector bf(5, 300);
+    auto bfThreats = bf.detect(index);
+    allThreats.insert(allThreats.end(), bfThreats.begin(), bfThreats.end());
 
-    // Test 4: Impossible threshold
-    std::cout << "\n--- Test 4: ErrorSpike threshold=50, window=60s ---\n";
-    ErrorSpikeDetector det4(50, 60);
-    for (const auto& t : det4.detect(entries)) {
-        std::cout << "  " << t.toString() << "\n";
+    SuspiciousIPDetector sip(10);
+    auto sipThreats = sip.detect(index);
+    allThreats.insert(allThreats.end(), sipThreats.begin(), sipThreats.end());
+
+    AccessDeniedDetector ad(3);
+    auto adThreats = ad.detect(index);
+    allThreats.insert(allThreats.end(), adThreats.begin(), adThreats.end());
+
+    ErrorSpikeDetector es(5, 60);
+    auto esThreats = es.detect(entries);
+    allThreats.insert(allThreats.end(), esThreats.begin(), esThreats.end());
+
+    std::cout << "\nTotal raw threats: " << allThreats.size() << "\n";
+
+    // Score all threats
+    std::cout << "\n--- ThreatScorer Output ---\n";
+    ThreatScorer scorer;
+    std::vector<Alert> alerts = scorer.scoreThreats(allThreats);
+
+    for (const auto& alert : alerts) {
+        std::cout << "  " << alert.toString() << "\n";
     }
-    std::cout << "  (expected: no threats)\n";
 
     return 0;
 }
