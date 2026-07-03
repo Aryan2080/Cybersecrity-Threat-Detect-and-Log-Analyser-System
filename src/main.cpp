@@ -1,11 +1,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include "models/LogEntry.hpp"
 #include "models/Threat.hpp"
 #include "loader/CSVLoader.hpp"
 #include "analyzer/ThreatAnalyzer.hpp"
 #include "analyzer/BruteForceDetector.hpp"
+#include "analyzer/SuspiciousIPDetector.hpp"
 
 int main(int argc, char* argv[]) {
     std::string log_file = "data/sample_logs.csv";
@@ -19,42 +21,42 @@ int main(int argc, char* argv[]) {
     std::cout << "       Log Analyzer v1.0.0\n";
     std::cout << "========================================\n\n";
 
-    // Step 1: Load CSV
+    // Load and index
     CSVLoader loader(log_file);
     std::vector<LogEntry> entries = loader.loadLogs();
-
-    // Step 2: Build index
     ThreatAnalyzer analyzer;
     analyzer.analyze(entries);
 
-    // Test 1: Default settings (5 failures in 300s)
-    std::cout << "\n--- Test 1: threshold=5, window=300s ---\n";
-    BruteForceDetector bf1(5, 300);
-    for (const auto& t : bf1.detect(analyzer.getIndex())) {
+    const auto& index = analyzer.getIndex();
+
+    // Test 1: Volume-based detection (threshold=10)
+    std::cout << "\n--- Test 1: SuspiciousIP threshold=10, no blacklist ---\n";
+    SuspiciousIPDetector det1(10);
+    for (const auto& t : det1.detect(index)) {
         std::cout << "  " << t.toString() << "\n";
     }
 
-    // Test 2: Lower threshold (3 failures in 300s)
-    std::cout << "\n--- Test 2: threshold=3, window=300s ---\n";
-    BruteForceDetector bf2(3, 300);
-    for (const auto& t : bf2.detect(analyzer.getIndex())) {
+    // Test 2: Lower threshold (threshold=5)
+    std::cout << "\n--- Test 2: SuspiciousIP threshold=5, no blacklist ---\n";
+    SuspiciousIPDetector det2(5);
+    for (const auto& t : det2.detect(index)) {
         std::cout << "  " << t.toString() << "\n";
     }
 
-    // Test 3: Very tight window (3 failures in 30s)
-    std::cout << "\n--- Test 3: threshold=3, window=30s ---\n";
-    BruteForceDetector bf3(3, 30);
-    for (const auto& t : bf3.detect(analyzer.getIndex())) {
+    // Test 3: Known-bad IP list
+    std::cout << "\n--- Test 3: SuspiciousIP threshold=100, with blacklist ---\n";
+    std::unordered_set<std::string> blacklist = {"10.0.0.50", "172.16.0.1"};
+    SuspiciousIPDetector det3(100, blacklist);
+    for (const auto& t : det3.detect(index)) {
         std::cout << "  " << t.toString() << "\n";
     }
 
-    // Test 4: Impossible threshold (100 failures)
-    std::cout << "\n--- Test 4: threshold=100, window=300s ---\n";
-    BruteForceDetector bf4(100, 300);
-    for (const auto& t : bf4.detect(analyzer.getIndex())) {
+    // Test 4: Both volume and blacklist
+    std::cout << "\n--- Test 4: SuspiciousIP threshold=5, with blacklist ---\n";
+    SuspiciousIPDetector det4(5, {"192.168.1.40"});
+    for (const auto& t : det4.detect(index)) {
         std::cout << "  " << t.toString() << "\n";
     }
-    std::cout << "  (expected: no threats)\n";
 
     return 0;
 }

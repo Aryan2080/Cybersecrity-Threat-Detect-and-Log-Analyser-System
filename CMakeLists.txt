@@ -17,6 +17,7 @@ set(SOURCES
     src/loader/CSVLoader.cpp
     src/analyzer/ThreatAnalyzer.cpp
     src/analyzer/BruteForceDetector.cpp
+    src/analyzer/SuspiciousIPDetector.cpp
 )
 
 # Main executable
