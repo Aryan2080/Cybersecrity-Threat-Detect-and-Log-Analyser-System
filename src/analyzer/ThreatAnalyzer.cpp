@@ -12,6 +12,28 @@ void ThreatAnalyzer::buildIndex(const std::vector<LogEntry>& entries) {
               << " unique IPs from " << entries.size() << " entries\n";
 }
 
+std::vector<Threat> ThreatAnalyzer::runAllDetectors(const std::vector<LogEntry>& entries) {
+    std::vector<Threat> allThreats;
+
+    // Detector 1: Brute force (uses ipIndex — per-IP sliding window)
+    auto bfThreats = bruteForceDetector.detect(ipIndex);
+    allThreats.insert(allThreats.end(), bfThreats.begin(), bfThreats.end());
+
+    // Detector 2: Suspicious IP (uses ipIndex — volume counting)
+    auto sipThreats = suspiciousIPDetector.detect(ipIndex);
+    allThreats.insert(allThreats.end(), sipThreats.begin(), sipThreats.end());
+
+    // Detector 3: Access denied (uses ipIndex — event counting)
+    auto adThreats = accessDeniedDetector.detect(ipIndex);
+    allThreats.insert(allThreats.end(), adThreats.begin(), adThreats.end());
+
+    // Detector 4: Error spike (uses full entries — global sliding window)
+    auto esThreats = errorSpikeDetector.detect(entries);
+    allThreats.insert(allThreats.end(), esThreats.begin(), esThreats.end());
+
+    return allThreats;
+}
+
 void ThreatAnalyzer::analyze(const std::vector<LogEntry>& entries) {
     if (entries.empty()) {
         std::cout << "[WARN] No entries to analyze\n";
@@ -20,16 +42,24 @@ void ThreatAnalyzer::analyze(const std::vector<LogEntry>& entries) {
 
     std::cout << "\n--- Analysis Pipeline ---\n";
 
-    // Step 1: Build the HashMap index
+    // Step 1: Build HashMap index
     buildIndex(entries);
 
-    // Step 2-6: Detectors, Scorer, AlertManager, ReportGenerator
-    // Will be integrated in Phase 12
+    // Step 2: Run all four detectors
+    std::vector<Threat> allThreats = runAllDetectors(entries);
 
-    std::cout << "\n--- Index Contents ---\n";
-    for (const auto& [ip, logs] : ipIndex) {
-        std::cout << "  " << ip << " : " << logs.size() << " entries\n";
+    // Step 3: Score threats into alerts
+    std::vector<Alert> scoredAlerts = scorer.scoreThreats(allThreats);
+
+    // Step 4: Feed into priority queue
+    for (const auto& alert : scoredAlerts) {
+        alertManager.addAlert(alert);
     }
+    std::vector<Alert> rankedAlerts = alertManager.getRankedAlerts();
+
+    // Step 5: Display report
+    reportGenerator.displayAlerts(rankedAlerts);
+    reportGenerator.displaySummary(rankedAlerts);
 }
 
 const std::unordered_map<std::string, std::vector<LogEntry>>& ThreatAnalyzer::getIndex() const {
