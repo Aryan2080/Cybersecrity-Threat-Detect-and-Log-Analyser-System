@@ -15,6 +15,8 @@ set(SOURCES
     src/models/Threat.cpp
     src/models/Alert.cpp
     src/loader/CSVLoader.cpp
+    src/analyzer/ThreatAnalyzer.cpp
+    src/analyzer/BruteForceDetector.cpp
 )
 
 # Main executable
