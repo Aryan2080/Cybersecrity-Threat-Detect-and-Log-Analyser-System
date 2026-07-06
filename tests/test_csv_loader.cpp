@@ -4,6 +4,7 @@
 #include <vector>
 #include "models/LogEntry.hpp"
 #include "loader/CSVLoader.hpp"
+#include "exceptions/Exceptions.hpp"
 
 int tests_passed = 0;
 int tests_failed = 0;
@@ -61,33 +62,78 @@ void testInvalidRows() {
 }
 
 void testMissingFile() {
-    std::cout << "\n--- test_csv_loader: Missing File ---\n";
+    std::cout << "\n--- test_csv_loader: Missing File (throws FileNotFoundException) ---\n";
     CSVLoader loader("nonexistent_file.csv");
-    auto entries = loader.loadLogs();
-
-    check(entries.empty(), "Returns empty vector for missing file");
-    check(loader.getErrorCount() == 0, "Zero errors (file not found is not a row error)");
+    bool threw = false;
+    try {
+        loader.loadLogs();
+    } catch (const FileNotFoundException&) {
+        threw = true;
+    }
+    check(threw, "Throws FileNotFoundException for missing file");
 }
 
 void testEmptyFile() {
-    std::cout << "\n--- test_csv_loader: Empty File ---\n";
+    std::cout << "\n--- test_csv_loader: Empty File (throws EmptyFileException) ---\n";
     createTestFile("test_empty.csv", "");
 
     CSVLoader loader("test_empty.csv");
-    auto entries = loader.loadLogs();
-
-    check(entries.empty(), "Returns empty vector for empty file");
+    bool threw = false;
+    try {
+        loader.loadLogs();
+    } catch (const EmptyFileException&) {
+        threw = true;
+    }
+    check(threw, "Throws EmptyFileException for empty file");
 }
 
 void testHeaderOnly() {
-    std::cout << "\n--- test_csv_loader: Header Only ---\n";
+    std::cout << "\n--- test_csv_loader: Header Only (throws EmptyFileException) ---\n";
     createTestFile("test_header.csv", "timestamp,user,ip,event,status\n");
 
     CSVLoader loader("test_header.csv");
-    auto entries = loader.loadLogs();
+    bool threw = false;
+    try {
+        loader.loadLogs();
+    } catch (const EmptyFileException&) {
+        threw = true;
+    }
+    check(threw, "Throws EmptyFileException for header-only file");
+}
 
-    check(entries.empty(), "Returns empty vector for header-only file");
-    check(loader.getErrorCount() == 0, "Zero errors");
+void testAllMalformed() {
+    std::cout << "\n--- test_csv_loader: All Malformed (throws InvalidCSVFormatException) ---\n";
+    createTestFile("test_malformed.csv",
+        "timestamp,user,ip,event,status\n"
+        "bad,row,only\n"
+        "another,bad\n");
+
+    CSVLoader loader("test_malformed.csv");
+    bool threw = false;
+    try {
+        loader.loadLogs();
+    } catch (const InvalidCSVFormatException&) {
+        threw = true;
+    }
+    check(threw, "Throws InvalidCSVFormatException when all rows are malformed");
+}
+
+void testTrailingDelimiter() {
+    std::cout << "\n--- test_csv_loader: Trailing Delimiter ---\n";
+    createTestFile("test_trailing.csv",
+        "timestamp,user,ip,event,status\n"
+        "2026-06-20 10:00:00,user1,192.168.1.1,LOGIN_FAIL,FAILED,\n");
+
+    CSVLoader loader("test_trailing.csv");
+    bool threw = false;
+    try {
+        auto entries = loader.loadLogs();
+        check(loader.getErrorCount() > 0, "Trailing delimiter detected as invalid row");
+    } catch (const InvalidCSVFormatException&) {
+        threw = true;
+    }
+    check(threw || loader.getErrorCount() > 0,
+          "Handles trailing delimiter (extra column rejected)");
 }
 
 int main() {
@@ -98,6 +144,8 @@ int main() {
     testMissingFile();
     testEmptyFile();
     testHeaderOnly();
+    testAllMalformed();
+    testTrailingDelimiter();
 
     std::cout << "\n=== Results: " << tests_passed << " passed, "
               << tests_failed << " failed ===\n";

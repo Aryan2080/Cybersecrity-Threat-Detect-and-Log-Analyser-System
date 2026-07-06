@@ -14,15 +14,20 @@
 #include "analyzer/ThreatScorer.hpp"
 #include "analyzer/AlertManager.hpp"
 #include "analyzer/ReportGenerator.hpp"
+#include "indexer/LogIndexer.hpp"
 
 class ThreatAnalyzer {
 public:
     void analyze(const std::vector<LogEntry>& entries);
 
     const std::unordered_map<std::string, std::vector<LogEntry>>& getIndex() const;
+    const LogIndexer& getLogIndexer() const;
+    const std::vector<Alert>& getRankedAlerts() const;
 
 private:
     std::unordered_map<std::string, std::vector<LogEntry>> ipIndex;
+    LogIndexer logIndexer;
+    std::vector<Alert> lastRankedAlerts;
 
     BruteForceDetector bruteForceDetector;
     SuspiciousIPDetector suspiciousIPDetector;

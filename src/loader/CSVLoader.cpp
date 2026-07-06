@@ -1,4 +1,5 @@
 #include "loader/CSVLoader.hpp"
+#include "exceptions/Exceptions.hpp"
 #include "utils/Logger.hpp"
 #include <fstream>
 #include <sstream>
@@ -13,6 +14,10 @@ std::vector<std::string> CSVLoader::splitLine(const std::string& line, char deli
 
     while (std::getline(ss, field, delimiter)) {
         fields.push_back(field);
+    }
+
+    if (!line.empty() && line.back() == delimiter) {
+        fields.push_back("");
     }
 
     return fields;
@@ -49,16 +54,13 @@ std::vector<LogEntry> CSVLoader::loadLogs() {
 
     std::ifstream file(filePath);
     if (!file.is_open()) {
-        Logger::error("Cannot open file: " + filePath);
-        return entries;
+        throw FileNotFoundException(filePath);
     }
 
     std::string line;
 
-    // Skip header row
     if (!std::getline(file, line)) {
-        Logger::error("File is empty: " + filePath);
-        return entries;
+        throw EmptyFileException(filePath);
     }
 
     int lineNumber = 1;
@@ -82,6 +84,15 @@ std::vector<LogEntry> CSVLoader::loadLogs() {
     }
 
     file.close();
+
+    if (entries.empty() && errorCount == 0) {
+        throw EmptyFileException(filePath);
+    }
+
+    if (entries.empty() && errorCount > 0) {
+        throw InvalidCSVFormatException(
+            "All " + std::to_string(errorCount) + " data row(s) were malformed.");
+    }
 
     Logger::info("Loaded " + std::to_string(entries.size()) +
                  " log entries from " + filePath);
