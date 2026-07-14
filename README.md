@@ -993,10 +993,14 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
   <tr>
     <td><b>Name</b></td>
     <td>Aryan</td>
+    <td><b>Name</b></td>
+    <td>Chandrika</td>
   </tr>
   <tr>
     <td><b>GitHub</b></td>
     <td><a href="https://github.com/Aryan2080">@Aryan2080</a></td>
+    <td><b>GitHub</b></td>
+    <td><a href="https://github.com/ychandrikanaidu912166-del">@ychandrikanaidu912166-del</a></td>
   </tr>
 </table>
 
